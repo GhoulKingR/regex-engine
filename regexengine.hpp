@@ -14,9 +14,11 @@ class RegexEngine {
     struct Pattern {
         std::string pattern;
         char modifier;
+        bool isWildCard;
         
-        Pattern(std::string pattern): pattern(pattern), modifier('\0') {}
-        Pattern(std::string pattern, char modifier): pattern(pattern), modifier(modifier) {}
+        Pattern(std::string pattern): pattern(pattern), modifier('\0'), isWildCard(false) {}
+        Pattern(std::string pattern, bool wildcard): pattern(pattern), modifier('\0'), isWildCard(wildcard) {}
+        Pattern(std::string pattern, char modifier): pattern(pattern), modifier(modifier), isWildCard(false) {}
     };
 
     bool frontBoundary = false;
@@ -44,6 +46,29 @@ class RegexEngine {
                 for (char c = back + 1; c <= token.character; c++) {
                     token_queue.push_back(Token(c, CHARACTER));
                 }
+            } else if (token_queue.size() > 0 && token_queue.back().type == WILDCARD) {
+                std::string card = "";
+                card += token_queue.back().character;
+                token_queue.pop_back();
+                Pattern new_pattern(card, true);
+                if (token.type == SYMBOL) {
+                    new_pattern.modifier = token.character;
+                }
+                patterns.push_back(new_pattern);
+            } else if (token.type == WILDCARD) {
+                std::string new_pattern = "";
+                while (!token_queue.empty()) {
+                    auto front = token_queue.front();
+                    token_queue.pop_front();
+                    new_pattern += front.character;
+                }
+
+                if (new_pattern.length() > 0) {
+                    patterns.push_back(Pattern(new_pattern));
+                    new_pattern = "";
+                }
+
+                token_queue.push_back(token);
             } else if (token.type == CHARACTER || token.type == HYPHEN || token.type == PIPE) {
                 token_queue.push_back(token);
             } else if (token.type == BRACKET) {
@@ -103,6 +128,15 @@ class RegexEngine {
             }
         }
 
+        std::string last_pattern = "";
+        while (!token_queue.empty()) {
+            last_pattern += token_queue.front().character;
+            token_queue.pop_front();
+        }
+        if (last_pattern.size() > 0) {
+            patterns.push_back(Pattern(last_pattern));
+        }
+
         return patterns;
     }
 
@@ -123,6 +157,7 @@ class RegexEngine {
 
     struct ProcessedPattern {
         std::vector<std::string> patterns;
+        bool iswildcard;
         char modifier;
     };
 
@@ -130,6 +165,7 @@ class RegexEngine {
         std::vector<ProcessedPattern> processed;
         for (auto pattern: patterns) {
             ProcessedPattern processed_pattern;
+            processed_pattern.iswildcard = pattern.isWildCard;
             processed_pattern.modifier = pattern.modifier;
 
             auto text = pattern.pattern;
@@ -155,9 +191,15 @@ class RegexEngine {
 
     bool recursively_match(std::string& with, int str_index, int current_pattern) {
         bool result = false;
+        bool wildcard = processed[current_pattern].iswildcard;
 
         for (auto pattern: processed[current_pattern].patterns) {
-            if (with.substr(str_index, pattern.length()) == pattern) {
+            if (wildcard) {
+                if (str_index == with.length()) {
+                    return current_pattern == processed.size() - 1;
+                }
+                result = result || recursively_match(with, str_index + 1, current_pattern);
+            } else if (with.substr(str_index, pattern.length()) == pattern) {
                 if (current_pattern == processed.size() - 1) {
                     if (backBoundary) {
                         return str_index + pattern.length() == with.length();

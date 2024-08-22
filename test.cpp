@@ -8,5 +8,9 @@ int main() {
 
     RegexEngine secengine("^a*(bcd|ef)+$");
     bool secresult = secengine.match("bcd");
-    secresult = secengine.match("badabcd");    
+    secresult = secengine.match("badabcd");
+
+    RegexEngine lengine(".*");
+    bool f = lengine.match("acorn");
+    bool fu = lengine.match("");
 }

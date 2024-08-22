@@ -32,6 +32,7 @@ namespace Tokenizer {
         HYPHEN,
         PIPE,
         BOUNDARY,
+        WILDCARD
     };
 
     struct Token {
@@ -63,6 +64,8 @@ namespace Tokenizer {
                 tokens.push_back(Token(c, HYPHEN));
             } else if (c == '|') {
                 tokens.push_back(Token(c, PIPE));
+            } else if (c == '.') {
+                tokens.push_back(Token(c, WILDCARD));
             } else {
                 char message[20];
                 snprintf(message, 20, "Invalid token '%c'", c);
