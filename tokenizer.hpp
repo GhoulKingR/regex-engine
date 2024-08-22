@@ -1,7 +1,7 @@
 #ifndef _TOKENIZER_HPP_
 #define _TOKENIZER_HPP_
 
-#include <vector>
+#include <list>
 #include <stdexcept>
 
 namespace Tokenizer {
@@ -10,6 +10,10 @@ namespace Tokenizer {
     namespace {
         bool isChar(char test) {
             return ('a' <= test && test <= 'z') || ('A' <= test && test <= 'Z') || ('0' <= test && test <= '9');
+        }
+
+        bool isBoundary(char chr) {
+            return chr == '^' || chr == '$';
         }
 
         bool isBracket(char c) {
@@ -27,6 +31,7 @@ namespace Tokenizer {
         SYMBOL,
         HYPHEN,
         PIPE,
+        BOUNDARY,
     };
 
     struct Token {
@@ -36,8 +41,8 @@ namespace Tokenizer {
         Token(char character, Type type): character(character), type(type) {}
     };
 
-    std::vector<Token> tokenize(std::string pattern) {
-        std::vector<Token> tokens;
+    std::list<Token> tokenize(std::string& pattern) {
+        std::list<Token> tokens;
         bool tochar = false;
 
         for (char c: pattern) {
@@ -52,6 +57,8 @@ namespace Tokenizer {
                 tokens.push_back(Token(c, BRACKET));
             } else if (isSymbol(c)) {
                 tokens.push_back(Token(c, SYMBOL));
+            } else if (isBoundary(c)) {
+                tokens.push_back(Token(c, BOUNDARY));
             } else if (c == '-') {
                 tokens.push_back(Token(c, HYPHEN));
             } else if (c == '|') {

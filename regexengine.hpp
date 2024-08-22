@@ -3,6 +3,7 @@
 
 #include <string>
 #include <iostream>
+#include <vector>
 #include <list>
 #include <stack>
 #include "tokenizer.hpp"
@@ -18,10 +19,22 @@ class RegexEngine {
         Pattern(std::string pattern, char modifier): pattern(pattern), modifier(modifier) {}
     };
 
-    std::vector<Pattern> get_patterns(std::string pattern) {
+    bool frontBoundary = false;
+    bool backBoundary = false;
+
+    std::vector<Pattern> get_patterns(std::string& pattern) {
         using namespace Tokenizer;
 
         auto tokens = tokenize(pattern);
+        if (tokens.front().type == BOUNDARY) {
+            frontBoundary = true;
+            tokens.pop_front();
+        }
+        if (tokens.back().type == BOUNDARY) {
+            backBoundary = true;
+            tokens.pop_back();
+        }
+
         std::vector<Pattern> patterns;
         std::list<Token> token_queue;
         for (auto token: tokens) {
@@ -140,13 +153,17 @@ class RegexEngine {
 
     std::vector<ProcessedPattern> processed;
 
-    bool recursively_match(std::string with, int str_index, int current_pattern) {
+    bool recursively_match(std::string& with, int str_index, int current_pattern) {
         bool result = false;
 
         for (auto pattern: processed[current_pattern].patterns) {
             if (with.substr(str_index, pattern.length()) == pattern) {
                 if (current_pattern == processed.size() - 1) {
-                    return str_index + pattern.length() == with.length();
+                    if (backBoundary) {
+                        return str_index + pattern.length() == with.length();
+                    } else {
+                        return true;
+                    }
                 } else {
                     result = result || recursively_match(with, pattern.length() + str_index, current_pattern + 1);
                 }
@@ -159,6 +176,10 @@ class RegexEngine {
 
         if (processed[current_pattern].modifier == '*' || processed[current_pattern].modifier == '?') {
             result = result || recursively_match(with, str_index, current_pattern + 1);
+        }
+
+        if (str_index == 0 && frontBoundary) {
+            result = result || recursively_match(with, str_index + 1, current_pattern);
         }
 
         return result;
