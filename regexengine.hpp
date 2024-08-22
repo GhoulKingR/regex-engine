@@ -178,7 +178,7 @@ class RegexEngine {
             result = result || recursively_match(with, str_index, current_pattern + 1);
         }
 
-        if (str_index == 0 && frontBoundary) {
+        if (!frontBoundary) {
             result = result || recursively_match(with, str_index + 1, current_pattern);
         }
 
