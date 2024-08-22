@@ -4,6 +4,8 @@
 #include <list>
 #include <stdexcept>
 
+#define ERR_SIZE 1000
+
 namespace Tokenizer {
     using namespace Tokenizer;
 
@@ -67,8 +69,8 @@ namespace Tokenizer {
             } else if (c == '.') {
                 tokens.push_back(Token(c, WILDCARD));
             } else {
-                char message[20];
-                snprintf(message, 20, "Invalid token '%c'", c);
+                char message[ERR_SIZE];
+                snprintf(message, ERR_SIZE, "Invalid token '%c' in \"%s\"", c, pattern);
                 throw std::runtime_error(message);
             }
         }

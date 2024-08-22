@@ -90,7 +90,7 @@ class RegexEngine {
             } else {
                 if (token_queue.size() == 0) {
                     char message[ERR_SIZE];
-                    snprintf(message, ERR_SIZE, "Invalid pattern: cannot consecutively process '%c' in '%s'", token.character, pattern.c_str());
+                    snprintf(message, ERR_SIZE, "Invalid pattern: unexpected '%c' in '%s'", token.character, pattern.c_str());
                     throw std::runtime_error(message);
                 } else if (token_queue.back().type == BRACKET) {
                     std::string new_pattern = "";
@@ -122,7 +122,7 @@ class RegexEngine {
                     patterns.push_back(Pattern(new_pattern, token.character));
                 } else {
                     char message[ERR_SIZE];
-                    snprintf(message, ERR_SIZE, "Invalid pattern: cannot consecutively process '%c' in '%s'", token.character, pattern.c_str());
+                    snprintf(message, ERR_SIZE, "Invalid pattern: unexpected '%c' in '%s'", token.character, pattern.c_str());
                     throw std::runtime_error(message);
                 }
             }
